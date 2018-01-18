@@ -73,14 +73,14 @@ pipeline {
     }
     stage('build docker images') {
       steps {
-        
+        parallel(
           'flask docker image':{
             node('master') {
               deleteDir()
               sh 'echo "HELLO"'
             }
           }
-        
+        )
       }
     }
 
