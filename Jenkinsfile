@@ -1,6 +1,6 @@
 pipeline {
   options {
-    buildDiscarder(logRotator(numToKeepStr:'100'))    
+    buildDiscarder(logRotator(numToKeepStr:'10'))    
 }
   agent none
   stages {
@@ -34,16 +34,6 @@ pipeline {
               step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/report_coverage.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
             }
           },
-          'rest api html': {
-            node(label: 'dms') {
-              deleteDir()
-              unstash 'code'
-              sh 'dms/scripts/build_rest_api_html'
-              archiveArtifacts 'dms/scripts/docs/*.html'
-              publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true, reportDir: 'dms/scripts/docs/', reportFiles: 'dms_rest_api.codegen_html.html', reportName: 'HTML Report', reportTitles: 'codegen_html'])
-              publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true, reportDir: 'dms/scripts/docs/', reportFiles: 'dms_rest_api.pretty-swag.html', reportName: 'HTML Report', reportTitles: 'pretty-swag'])
-            }
-          },
           'tests acceptance': {
             node(label: 'dms') {
               deleteDir()
@@ -68,22 +58,7 @@ pipeline {
               warnings canComputeNew: false, canResolveRelativePaths: false, defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', parserConfigurations: [[parserName: 'PyLint', pattern: 'report_pylint.txt']], unHealthy: ''
             }
           },
-          'clonedigger': {
-             node(label: 'dms') {
-               deleteDir()
-               unstash 'code'
-               sh 'dms/run_clonedigger'
-               archiveArtifacts '*.html, *.xml'
-               stash name: 'clonedigger_report', includes: 'report_clonedigger.xml'
-             }
-             node('master') {
-             // This portion using a custom Warnings scanner for clonedigger parsing
-             // can only run on the master with Warnings plugin 4.62.
-             // See https://issues.jenkins-ci.org/browse/JENKINS-43813 for more info
-               unstash 'clonedigger_report'
-             warnings canComputeNew: false, canResolveRelativePaths: false, defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', parserConfigurations: [[parserName: 'CloneDigger', pattern: 'report_clonedigger.xml']], unHealthy: ''
-            }
-          },
+         ,
           'build wheel package': {
             node(label: 'dms') {
               deleteDir()
@@ -102,50 +77,13 @@ pipeline {
               stash name: 'sqlite3 database', includes: 'dms/dms.sqlite3'
             }
           },
-          // UI stuff
-          'ui build': {
-            node(label: 'dms') {
-              deleteDir()
-              unstash 'code'
-              sh 'dms/ui/build.sh'
-              archiveArtifacts 'dms/ui/dist.tar.gz'
-              stash name: 'covalent ui build tar package', includes: 'dms/ui/dist.tar.gz'
-            }
-          },
-          'ui e2e tests': {
-            node(label: 'dms') {
-//              deleteDir()
-//              unstash 'code'
-//              // Run UI smoke test inline
-//              wrap([$class: 'Xvfb']) {
-//                lock('selenium_single_instance') {
-//                  // lock so we do not accidentally run 2+ at a time on a single agent,
-//                  // as we currently have a hard-coded TCP port
-//                  sh 'dms/ui/smoke-test.sh'
-//                }
-//              }
-//              junit 'dms/ui/junitresults.xml'
-                echo 'disabled until we can get more stability'
-            }
-          }
+       
         )
       }
     }
     stage('build docker images') {
       steps {
         parallel(
-          'nginx UI docker image':{
-            node(label: 'dms') {
-              deleteDir()
-              unstash 'code'
-              unstash 'covalent ui build tar package'
-              sh 'docker build -f dms_nginx_ui_Dockerfile -t dms-nginx-ui .'
-              sh 'docker save dms-nginx-ui -o dms_nginx_ui_docker.tar'
-              sh 'gzip dms_nginx_ui_docker.tar'
-              archiveArtifacts 'dms_nginx_ui_docker.tar.gz'
-              stash name : 'dms nginx UI docker image', includes: 'dms_nginx_ui_docker.tar.gz'
-            }
-          },
           'flask docker image':{
             node(label: 'dms') {
               deleteDir()
