@@ -19,8 +19,8 @@ pipeline {
             node('master') {
               deleteDir()
               unstash 'code'
-              sh 'run_pytest_unit'
-              #junit 'report_pytest_unit.xml'
+              sh 'echo "HELLO"'
+              
             }
           },
            // TODO: make the coverage report be built-into the unit/acceptance test steps
@@ -28,32 +28,28 @@ pipeline {
             node('master') {
               deleteDir()
               unstash 'code'
-              sh 'run_coverage'
-              #step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/report_coverage.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
+              sh 'echo "HELLO"'
             }
           },
           'tests acceptance': {
             node('master') {
               deleteDir()
               unstash 'code'
-              sh 'run_pytest_acceptance'
-             # junit allowEmptyResults: true, testResults: 'report_pytest_acceptance.xml'
+             sh 'echo "HELLO"'
             }
            },
           'flake8': {
             node('master') {
               deleteDir()
               unstash 'code'
-              sh 'run_flake8'
-              #warnings canComputeNew: false, canResolveRelativePaths: false, defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', parserConfigurations: [[parserName: 'Pep8', pattern: 'report_flake8.txt']], unHealthy: ''
+              sh 'echo "HELLO"'
             }
            },
           'pylint': {
             node('master') {
               deleteDir()
               unstash 'code'
-              sh 'run_pylint'
-              #warnings canComputeNew: false, canResolveRelativePaths: false, defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', parserConfigurations: [[parserName: 'PyLint', pattern: 'report_pylint.txt']], unHealthy: ''
+              sh 'echo "HELLO"'
             }
           },
          ,
@@ -61,18 +57,14 @@ pipeline {
             node('master') {
               deleteDir()
               unstash 'code'
-              sh 'build_wheel'
-              archive 'dist/*'
-              #stash name: 'wheel_package', includes: 'dist/*.whl'
+              sh 'echo "HELLO"'
             }
           },
           'build sqlite3 database': {
             node('master') {
               deleteDir()
               unstash 'code'
-              sh 'build_sqlite3_db'
-              archive 'dms.sqlite3'
-              #stash name: 'sqlite3 database', includes: 'dms.sqlite3'
+              sh 'echo "HELLO"'
             }
           },
        
@@ -85,14 +77,7 @@ pipeline {
           'flask docker image':{
             node('master') {
               deleteDir()
-              unstash 'code'
-              unstash 'wheel_package'
-              unstash 'sqlite3 database'
-              sh 'docker build -t flask_app -f dms_flask_Dockerfile .'
-              sh 'docker save flask_app -o dms_flask_docker.tar'
-              sh 'gzip dms_flask_docker.tar'
-             # archiveArtifacts 'dms_flask_docker.tar.gz'
-              #stash name: 'dms docker image', includes: 'dms_flask_docker.tar.gz'
+              sh 'echo "HELLO"'
             }
           }
         
