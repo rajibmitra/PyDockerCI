@@ -66,7 +66,7 @@ pipeline {
               unstash 'code'
               sh 'echo "HELLO"'
             }
-          },
+          }
        
         )
       }
