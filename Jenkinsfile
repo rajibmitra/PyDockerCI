@@ -1,12 +1,10 @@
 pipeline {
-  options {
-    buildDiscarder(logRotator(numToKeepStr:'10'))    
-}
+
   agent none
   stages {
     stage('prep'){
       steps {
-        node(label: 'master') {
+        node('master') {
           deleteDir()
           checkout scm
           stash 'code'
@@ -18,7 +16,7 @@ pipeline {
         parallel(
           // REST API stuff
           'tests unit': {
-            node(label: 'master') {
+            node('master') {
               deleteDir()
               unstash 'code'
               sh 'run_pytest_unit'
@@ -27,7 +25,7 @@ pipeline {
           },
            // TODO: make the coverage report be built-into the unit/acceptance test steps
           'coverage': {
-            node(label: 'master') {
+            node('master') {
               deleteDir()
               unstash 'code'
               sh 'run_coverage'
@@ -35,7 +33,7 @@ pipeline {
             }
           },
           'tests acceptance': {
-            node(label: 'master') {
+            node('master') {
               deleteDir()
               unstash 'code'
               sh 'run_pytest_acceptance'
@@ -43,7 +41,7 @@ pipeline {
             }
            },
           'flake8': {
-            node(label: 'master') {
+            node('master') {
               deleteDir()
               unstash 'code'
               sh 'run_flake8'
@@ -51,7 +49,7 @@ pipeline {
             }
            },
           'pylint': {
-            node(label: 'master') {
+            node('master') {
               deleteDir()
               unstash 'code'
               sh 'run_pylint'
@@ -60,7 +58,7 @@ pipeline {
           },
          ,
           'build wheel package': {
-            node(label: 'master') {
+            node('master') {
               deleteDir()
               unstash 'code'
               sh 'build_wheel'
@@ -69,7 +67,7 @@ pipeline {
             }
           },
           'build sqlite3 database': {
-            node(label: 'master') {
+            node('master') {
               deleteDir()
               unstash 'code'
               sh 'build_sqlite3_db'
@@ -85,7 +83,7 @@ pipeline {
       steps {
         
           'flask docker image':{
-            node(label: 'master') {
+            node('master') {
               deleteDir()
               unstash 'code'
               unstash 'wheel_package'
